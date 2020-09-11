@@ -3369,8 +3369,8 @@ typedef NS_ENUM(NSUInteger, YYTextMoveDirection) {
     /*************NameWzz修复range越界****************/
     if (_markedTextRange == nil) {
         _markedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_selectedTextRange.end.offset, markedText.length)];
-        NSRange newRange = _markedTextRange.asRange;
-        if (newRange.location+newRange.length <= _innerText.length) {
+        
+        if (_selectedTextRange.end.offset <= _innerText.length) {
             [_innerText replaceCharactersInRange:NSMakeRange(_selectedTextRange.end.offset, 0) withString:markedText];
         }
         _selectedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_selectedTextRange.start.offset + selectedRange.location, selectedRange.length)];
