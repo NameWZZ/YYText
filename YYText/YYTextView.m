@@ -1466,11 +1466,23 @@ typedef NS_ENUM(NSUInteger, YYTextMoveDirection) {
             if (notify) [_inputDelegate selectionDidChange:self];
         }
     }
+    /*
     if (notify) [_inputDelegate textWillChange:self];
     NSRange newRange = NSMakeRange(range.asRange.location, text.length);
     [_innerText replaceCharactersInRange:range.asRange withString:text];
     [_innerText yy_removeDiscontinuousAttributesInRange:newRange];
     if (notify) [_inputDelegate textDidChange:self];
+    */
+    /*************NameWzz修复range越界****************/
+    NSRange newRange = range.asRange;
+    if (newRange.location+newRange.length <= _innerText.length) {
+        if (notify) [_inputDelegate textWillChange:self];
+        NSRange newRange = NSMakeRange(range.asRange.location, text.length);
+        [_innerText replaceCharactersInRange:range.asRange withString:text];
+        [_innerText yy_removeDiscontinuousAttributesInRange:newRange];
+        if (notify) [_inputDelegate textDidChange:self];
+    }
+    /*************NameWzz修复range越界****************/
 }
 
 /// Save current typing attributes to the attributes holder.
@@ -3342,6 +3354,7 @@ typedef NS_ENUM(NSUInteger, YYTextMoveDirection) {
     [_inputDelegate selectionWillChange:self];
     
     if (!markedText) markedText = @"";
+    /*
     if (_markedTextRange == nil) {
         _markedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_selectedTextRange.end.offset, markedText.length)];
         [_innerText replaceCharactersInRange:NSMakeRange(_selectedTextRange.end.offset, 0) withString:markedText];
@@ -3352,7 +3365,25 @@ typedef NS_ENUM(NSUInteger, YYTextMoveDirection) {
         _markedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_markedTextRange.start.offset, markedText.length)];
         _selectedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_markedTextRange.start.offset + selectedRange.location, selectedRange.length)];
     }
-    
+    */
+    /*************NameWzz修复range越界****************/
+    if (_markedTextRange == nil) {
+        _markedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_selectedTextRange.end.offset, markedText.length)];
+        NSRange newRange = _markedTextRange.asRange;
+        if (newRange.location+newRange.length <= _innerText.length) {
+            [_innerText replaceCharactersInRange:NSMakeRange(_selectedTextRange.end.offset, 0) withString:markedText];
+        }
+        _selectedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_selectedTextRange.start.offset + selectedRange.location, selectedRange.length)];
+    } else {
+        _markedTextRange = [self _correctedTextRange:_markedTextRange];
+        NSRange newRange = _markedTextRange.asRange;
+        if (newRange.location+newRange.length <= _innerText.length) {
+            [_innerText replaceCharactersInRange:_markedTextRange.asRange withString:markedText];
+        }
+        _markedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_markedTextRange.start.offset, markedText.length)];
+        _selectedTextRange = [YYTextRange rangeWithRange:NSMakeRange(_markedTextRange.start.offset + selectedRange.location, selectedRange.length)];
+    }
+    /*************NameWzz修复range越界****************/
     _selectedTextRange = [self _correctedTextRange:_selectedTextRange];
     _markedTextRange = [self _correctedTextRange:_markedTextRange];
     if (_markedTextRange.asRange.length == 0) {
